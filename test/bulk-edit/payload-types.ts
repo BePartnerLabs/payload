@@ -92,6 +92,11 @@ export interface Config {
   globals: {};
   globalsSelect: {};
   locale: null;
+  widgets: {
+    collections: CollectionsWidget;
+    'collection-query': CollectionQueryWidget;
+    activity: ActivityWidget;
+  };
   user: User;
   jobs: {
     tasks: unknown;
@@ -127,6 +132,8 @@ export interface Post {
   fieldWithBeforeInputA1?: string | null;
   fieldWithBeforeInputA2?: string | null;
   fieldWithBeforeInputB?: string | null;
+  fieldWithCustomField?: string | null;
+  fieldWithCustomLabel?: string | null;
   defaultValueField?: string | null;
   group?: {
     defaultValueField?: string | null;
@@ -146,14 +153,7 @@ export interface Post {
         id?: string | null;
       }[]
     | null;
-  blocks?:
-    | {
-        textFieldForBlock?: string | null;
-        id?: string | null;
-        blockName?: string | null;
-        blockType: 'textBlock';
-      }[]
-    | null;
+  blocks?: TextBlock[] | null;
   noRead?: string | null;
   noUpdate?: string | null;
   updatedAt: string;
@@ -162,18 +162,33 @@ export interface Post {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TextBlock".
+ */
+export interface TextBlock {
+  textFieldForBlock?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'textBlock';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "tabs".
  */
 export interface Tab {
   id: string;
   title?: string | null;
+  noLabelText?: string | null;
   tabTab?: {
+    tabText?: string | null;
     tabTabArray?:
       | {
           tabTabArrayText?: string | null;
           id?: string | null;
         }[]
       | null;
+  };
+  noLabelGroup?: {
+    rowText?: string | null;
   };
   updatedAt: string;
   createdAt: string;
@@ -291,6 +306,8 @@ export interface PostsSelect<T extends boolean = true> {
   fieldWithBeforeInputA1?: T;
   fieldWithBeforeInputA2?: T;
   fieldWithBeforeInputB?: T;
+  fieldWithCustomField?: T;
+  fieldWithCustomLabel?: T;
   defaultValueField?: T;
   group?:
     | T
@@ -335,15 +352,22 @@ export interface PostsSelect<T extends boolean = true> {
  */
 export interface TabsSelect<T extends boolean = true> {
   title?: T;
+  noLabelText?: T;
   tabTab?:
     | T
     | {
+        tabText?: T;
         tabTabArray?:
           | T
           | {
               tabTabArrayText?: T;
               id?: T;
             };
+      };
+  noLabelGroup?:
+    | T
+    | {
+        rowText?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -409,6 +433,49 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collections_widget".
+ */
+export interface CollectionsWidget {
+  data?: {
+    [k: string]: unknown;
+  };
+  width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collection-query_widget".
+ */
+export interface CollectionQueryWidget {
+  data?: {
+    title?: string | null;
+    relatedCollection: 'posts' | 'tabs' | 'users';
+    where?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+    sortField?: string | null;
+    sortDirection?: ('asc' | 'desc') | null;
+    limit?: number | null;
+  };
+  width: 'x-small' | 'small' | 'medium' | 'large' | 'x-large' | 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "activity_widget".
+ */
+export interface ActivityWidget {
+  data?: {
+    excludedCollections?: ('posts' | 'tabs' | 'users')[] | null;
+  };
+  width: 'x-small' | 'small' | 'medium' | 'large' | 'x-large' | 'full';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

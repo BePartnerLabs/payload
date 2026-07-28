@@ -8,13 +8,14 @@ const dirname = path.dirname(filename)
 import type { NextAppDetails } from '../types.js'
 
 import { copyRecursiveSync } from '../utils/copy-recursive-sync.js'
-import { getLatestPackageVersion } from '../utils/getLatestPackageVersion.js'
 import { info } from '../utils/log.js'
+import { resolvePackageVersion } from '../utils/resolvePackageVersion.js'
 import { getPackageManager } from './get-package-manager.js'
 import { installPackages } from './install-packages.js'
 
 export async function updatePayloadInProject(
   appDetails: NextAppDetails,
+  versionOrTag?: string,
 ): Promise<{ message: string; success: boolean }> {
   if (!appDetails.nextConfigPath) {
     return { message: 'No Next.js config found', success: false }
@@ -36,8 +37,8 @@ export async function updatePayloadInProject(
 
   const packageManager = await getPackageManager({ projectDir })
 
-  // Fetch latest Payload version
-  const latestPayloadVersion = await getLatestPackageVersion({ packageName: 'payload' })
+  // Resolve the requested Payload version (dist-tag or explicit version)
+  const latestPayloadVersion = await resolvePackageVersion({ packageName: 'payload', versionOrTag })
 
   if (payloadVersion === latestPayloadVersion) {
     return { message: `Payload v${payloadVersion} is already up to date.`, success: true }
@@ -77,11 +78,25 @@ export async function updatePayloadInProject(
 
   const templateSrcDir = path.resolve(templateFilesPath, 'src/app/(payload)')
 
-  copyRecursiveSync(
-    templateSrcDir,
-    path.resolve(projectDir, appDetails.isSrcDir ? 'src/app' : 'app', '(payload)'),
-    ['custom.scss$'], // Do not overwrite user's custom.scss
+  const payloadDirPath = path.resolve(
+    projectDir,
+    appDetails.isSrcDir ? 'src/app' : 'app',
+    '(payload)',
   )
+
+  // Rename a pre-migration `custom.scss` so the user's styles carry over to the `custom.css`
+  // that the refreshed `layout.tsx` imports, and stay protected by the ignore pattern below.
+  const legacyCustomStylesPath = path.resolve(payloadDirPath, 'custom.scss')
+  const customCssPath = path.resolve(payloadDirPath, 'custom.css')
+
+  if (fse.existsSync(legacyCustomStylesPath) && !fse.existsSync(customCssPath)) {
+    fse.renameSync(legacyCustomStylesPath, customCssPath)
+    info(
+      'Renamed `(payload)/custom.scss` to `custom.css`. If it contained Sass syntax (nesting, `$variables`, `@mixin`, etc.), convert it to plain CSS — it is no longer transpiled.',
+    )
+  }
+
+  copyRecursiveSync(templateSrcDir, payloadDirPath, ['custom.css$']) // Do not overwrite user's custom.css
 
   return { message: 'Payload updated successfully.', success: true }
 }

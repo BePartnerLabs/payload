@@ -21,6 +21,7 @@ export interface Args extends arg.Spec {
   '--no-agent': BooleanConstructor
   '--no-deps': BooleanConstructor
   '--no-git': BooleanConstructor
+  '--payload-version': StringConstructor
   '--secret': StringConstructor
   '--template': StringConstructor
   '--use-bun': BooleanConstructor
@@ -79,8 +80,6 @@ export type DbDetails = {
   dbUri?: string
   type: DbType
 }
-
-export type EditorType = 'lexical' | 'slate'
 
 export type NextAppDetails = {
   hasTopLevelLayout: boolean

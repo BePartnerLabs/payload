@@ -2,7 +2,6 @@ import type { Page } from '@playwright/test'
 import type { SanitizedConfig } from 'payload'
 
 import { expect, test } from '@playwright/test'
-import { devUser } from 'credentials.js'
 import path from 'path'
 import { formatAdminURL } from 'payload/shared'
 import { fileURLToPath } from 'url'
@@ -16,8 +15,9 @@ import {
   initPageConsoleErrorCatch,
 } from '../__helpers/e2e/helpers.js'
 import { AdminUrlUtil } from '../__helpers/shared/adminUrlUtil.js'
-import { initPayloadE2ENoConfig } from '../__helpers/shared/initPayloadE2ENoConfig.js'
 import { reInitializeDB } from '../__helpers/shared/clearAndSeed/reInitializeDB.js'
+import { initPayloadE2ENoConfig } from '../__helpers/shared/initPayloadE2ENoConfig.js'
+import { devUser } from '../credentials.js'
 import { POLL_TOPASS_TIMEOUT, TEST_TIMEOUT_LONG } from '../playwright.config.js'
 
 const filename = fileURLToPath(import.meta.url)
@@ -50,16 +50,14 @@ const createFirstUser = async ({
   await page.locator('#field-email').fill(devUser.email)
   await page.locator('#field-password').fill(devUser.password)
   await page.locator('.form-submit > button').click()
-  await expect(page.locator('.field-type.confirm-password .field-error')).toHaveText(
-    'This field is required.',
-  )
+  await expect(page.locator('#field-error-confirm-password')).toHaveText('This field is required.')
 
   // make them match, but does not pass password validation
   await page.locator('#field-email').fill(devUser.email)
   await page.locator('#field-password').fill('12')
   await page.locator('#field-confirm-password').fill('12')
   await page.locator('.form-submit > button').click()
-  await expect(page.locator('.field-type.password .field-error')).toHaveText(
+  await expect(page.locator('#field-error-password')).toHaveText(
     'This value must be longer than the minimum length of 3 characters.',
   )
 
